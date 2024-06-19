@@ -2,13 +2,17 @@ import { useState, useEffect, useCallback, useRef, RefObject } from 'react';
 
 import { getIsTrackCueActive } from '@/app/components/TrackCues/helpers';
 import { TrackCue } from '@/app/components/TrackCues/types';
+import { useTrackCuesDispatch } from '@/app/contexts/TrackCuesContextProvider';
+import { useVideoStateContext } from '@/app/contexts/VideoStateContextProvider';
+import { useTrackCuesContext } from '@/app/contexts/TrackCuesContextProvider';
 
-type DetermineActiveTrackCueIndexHandler = (currentTime: number) => number | undefined;
-type UseTrackCuesReturn = [TrackCue[], number, DetermineActiveTrackCueIndexHandler];
+type DetermineActiveTrackCueIndexHandler = (currentTime: number) => void;
+type UseInitializeTrackCuesReturn = TrackCue[];
 
-const useTrackCues = (videoRef: RefObject<HTMLVideoElement>): UseTrackCuesReturn => {
-  const [trackCues, setTrackCues] = useState<TrackCue[]>([]);
-  const [activeTrackCueIndex, setActiveTrackCueIndex] = useState<number>(-1);
+const useInitializeTrackCues = (videoRef: RefObject<HTMLVideoElement>): UseInitializeTrackCuesReturn => {
+  const { currentTime } = useVideoStateContext();
+  const { trackCues } = useTrackCuesContext();
+  const trackCuesDispatch = useTrackCuesDispatch();
 
   /**
    * Use a ref to store the active index for reference in the timeupdate event handler.
@@ -18,13 +22,13 @@ const useTrackCues = (videoRef: RefObject<HTMLVideoElement>): UseTrackCuesReturn
 
   useEffect(() => {
     const videoElement = videoRef.current;
-    if (!videoElement) return setTrackCues([]);
+    if (!videoElement) return trackCuesDispatch({ type: 'SET_TRACK_CUES', trackCues: [] });
 
     const mainTextTrack = videoElement.textTracks[0];
-    if (!mainTextTrack) return setTrackCues([]);
+    if (!mainTextTrack) return trackCuesDispatch({ type: 'SET_TRACK_CUES', trackCues: [] });
 
     const cues = mainTextTrack.cues;
-    if (!cues) return setTrackCues([]);
+    if (!cues) return trackCuesDispatch({ type: 'SET_TRACK_CUES', trackCues: [] });
 
     const parsedTrackCues = [];
 
@@ -37,8 +41,8 @@ const useTrackCues = (videoRef: RefObject<HTMLVideoElement>): UseTrackCuesReturn
       }
     }
 
-    setTrackCues(parsedTrackCues);
-  }, [videoRef]);
+    trackCuesDispatch({ type: 'SET_TRACK_CUES', trackCues: parsedTrackCues });
+  }, [videoRef, trackCuesDispatch]);
 
   /**
    * Handle the timeupdate event on the video element to determine the active track cue
@@ -69,13 +73,16 @@ const useTrackCues = (videoRef: RefObject<HTMLVideoElement>): UseTrackCuesReturn
       }
 
       trackCueActiveIndexRef.current = nextTrackCueActiveIndex;
-      // setActiveTrackCueIndex(nextTrackCueActiveIndex);
-      return nextTrackCueActiveIndex;
+      trackCuesDispatch({ type: 'SET_ACTIVE_TRACK_CUE_INDEX', index: nextTrackCueActiveIndex });
     },
-    [trackCues],
+    [trackCues, trackCuesDispatch],
   );
 
-  return [trackCues, activeTrackCueIndex, determineActiveTrackCueIndex];
+  useEffect(() => {
+    determineActiveTrackCueIndex(currentTime);
+  }, [currentTime, determineActiveTrackCueIndex]);
+
+  return trackCues;
 };
 
-export default useTrackCues;
+export default useInitializeTrackCues;

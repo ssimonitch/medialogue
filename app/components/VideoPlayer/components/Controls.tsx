@@ -1,19 +1,16 @@
 'use client';
 
-import { FunctionComponent, memo } from 'react';
-import { VideoState, VideoStateHandlers } from '@/app/components/VideoPlayer/hooks/useVideoState';
+import { FunctionComponent, memo, ChangeEventHandler } from 'react';
+import { useVideoStateContext } from '@/app/contexts/VideoStateContextProvider';
 
-type VideoControlsProps = Pick<VideoState, 'playing' | 'volume'> &
-  Pick<VideoStateHandlers, 'handlePlayPause' | 'handleStop' | 'handleVolumeChange'>;
+type VideoControlsProps = {
+  handlePlayPause: () => void;
+  handleStop: () => void;
+  handleVolumeChange: ChangeEventHandler<HTMLInputElement>;
+};
 
-const Controls: FunctionComponent<VideoControlsProps> = ({
-  playing,
-  volume,
-  handleVolumeChange,
-  handlePlayPause,
-  handleStop,
-}) => {
-  console.log('::VideoControls rendered::');
+const Controls: FunctionComponent<VideoControlsProps> = ({ handleVolumeChange, handlePlayPause, handleStop }) => {
+  const { playing, volume } = useVideoStateContext();
   return (
     <>
       <button className="rounded bg-blue-200 px-2 text-white" onClick={handlePlayPause}>

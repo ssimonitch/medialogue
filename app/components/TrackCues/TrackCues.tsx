@@ -3,16 +3,10 @@
 import clsx from 'clsx';
 import { memo, FunctionComponent } from 'react';
 
-import { TrackCue } from '@/app/components/TrackCues/types';
-import { useTrackCues } from '@/app/contexts/TrackCuesContextProvider';
+import { useTrackCuesContext } from '@/app/contexts/TrackCuesContextProvider';
 
-type TrackCuesProps = {
-  trackCues: TrackCue[];
-};
-
-const TrackCues: FunctionComponent<TrackCuesProps> = ({ trackCues }) => {
-  const { activeTrackCueIndex } = useTrackCues();
-  console.log('::TrackCues rendered::');
+const TrackCues: FunctionComponent = () => {
+  const { activeTrackCueIndex, trackCues } = useTrackCuesContext();
   return (
     <ol>
       {trackCues.map(({ id, text }, index) => (

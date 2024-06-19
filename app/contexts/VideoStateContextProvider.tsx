@@ -10,6 +10,8 @@ export type VideoState = {
   seeking: boolean;
 };
 
+// TODO - look at performance implications of including currentTime in this state as it will cause
+// all subscribers to re-render on every time update
 type VideoStateAction =
   | { type: 'SET_CURRENT_TIME'; currentTime: number }
   | { type: 'SET_PLAYING'; playing: boolean }
@@ -52,10 +54,10 @@ const VideoStateContextProvider: FunctionComponent<PropsWithChildren> = ({ child
   );
 };
 
-export const useVideoState = () => {
+export const useVideoStateContext = () => {
   const context = useContext(VideoStateContext);
   if (context === undefined) {
-    throw new Error('useVideoState must be used within a VideoStateContextProvider');
+    throw new Error('useVideoStateContext must be used within a VideoStateContextProvider');
   }
   return context;
 };

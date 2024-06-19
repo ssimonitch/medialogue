@@ -3,9 +3,9 @@
 import { forwardRef, memo, HTMLProps } from 'react';
 
 const Video = forwardRef<HTMLVideoElement, HTMLProps<HTMLVideoElement>>(function Video({ children, ...props }, ref) {
-  console.log('::Video rendered::');
   return (
-    <video {...props} ref={ref}>
+    // todo properly configure muted and autoplay
+    <video {...props} muted ref={ref}>
       {/* 
         TODO - expose track props to interface and update interface to not allow children
                we want to prevent children from being passed in as it will break memoization of the component
