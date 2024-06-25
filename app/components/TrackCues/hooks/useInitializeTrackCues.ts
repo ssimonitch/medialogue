@@ -1,88 +1,67 @@
-import { useState, useEffect, useCallback, useRef, RefObject } from 'react';
+import { useEffect, RefObject, useState } from 'react';
 
-import { getIsTrackCueActive } from '@/app/components/TrackCues/helpers';
+import { useVideoStateContext, useVideoStateDispatch } from '@/app/contexts/VideoStateContextProvider';
+
 import { TrackCue } from '@/app/components/TrackCues/types';
-import { useTrackCuesDispatch } from '@/app/contexts/TrackCuesContextProvider';
-import { useVideoStateContext } from '@/app/contexts/VideoStateContextProvider';
-import { useTrackCuesContext } from '@/app/contexts/TrackCuesContextProvider';
 
-type DetermineActiveTrackCueIndexHandler = (currentTime: number) => void;
-type UseInitializeTrackCuesReturn = TrackCue[];
+type UseInitializeTrackCuesReturn = [TrackCue[]];
 
 const useInitializeTrackCues = (videoRef: RefObject<HTMLVideoElement>): UseInitializeTrackCuesReturn => {
-  const { currentTime } = useVideoStateContext();
-  const { trackCues } = useTrackCuesContext();
-  const trackCuesDispatch = useTrackCuesDispatch();
+  const [trackCues, setTrackCues] = useState<TrackCue[]>([]);
 
-  /**
-   * Use a ref to store the active index for reference in the timeupdate event handler.
-   * This is done to avoid re-running the effect every time the value updates
-   */
-  const trackCueActiveIndexRef = useRef<number>(-1);
+  const { pauseOnCueExit } = useVideoStateContext();
+  const videoStateDispatch = useVideoStateDispatch();
 
   useEffect(() => {
     const videoElement = videoRef.current;
-    if (!videoElement) return trackCuesDispatch({ type: 'SET_TRACK_CUES', trackCues: [] });
+    if (!videoElement) return setTrackCues([]);
 
     const mainTextTrack = videoElement.textTracks[0];
-    if (!mainTextTrack) return trackCuesDispatch({ type: 'SET_TRACK_CUES', trackCues: [] });
+    if (!mainTextTrack) return setTrackCues([]);
 
     const cues = mainTextTrack.cues;
-    if (!cues) return trackCuesDispatch({ type: 'SET_TRACK_CUES', trackCues: [] });
+    if (!cues) return setTrackCues([]);
 
+    // hide the track so we can render custom UI
+    mainTextTrack.mode = 'hidden';
+
+    const cuesArray = Array.from(cues);
     const parsedTrackCues = [];
 
-    for (let index = 0; index < cues.length; index++) {
-      const cue = cues[index];
+    for (const cue of cuesArray) {
       if (cue instanceof VTTCue) {
+        cue.pauseOnExit = pauseOnCueExit;
         parsedTrackCues.push({ id: cue.id, text: cue.text, startTime: cue.startTime, endTime: cue.endTime });
       } else {
+        // none of this will work unless we use VTT
         throw new Error(`Unsupported cue type: ${cue.constructor.name}`);
       }
     }
 
-    trackCuesDispatch({ type: 'SET_TRACK_CUES', trackCues: parsedTrackCues });
-  }, [videoRef, trackCuesDispatch]);
+    mainTextTrack.oncuechange = () => {
+      console.log('cue change');
+      const activeCues = mainTextTrack.activeCues;
+      const isPaused = videoElement.paused;
 
-  /**
-   * Handle the timeupdate event on the video element to determine the active track cue
-   */
-  const determineActiveTrackCueIndex = useCallback<DetermineActiveTrackCueIndexHandler>(
-    (currentTime) => {
-      if (trackCues.length === 0) return;
-
-      // If the current cue is still active, do nothing
-      const activeTrackCue = trackCues[trackCueActiveIndexRef.current];
-      if (activeTrackCue && getIsTrackCueActive(activeTrackCue, currentTime)) {
-        return;
+      if (!activeCues || activeCues.length === 0) {
+        // if we are using pauseOnCueExit don't actually unset the active track cue index when paused
+        // this will allow the user to read the cue before the video resumes
+        return pauseOnCueExit && isPaused
+          ? undefined
+          : videoStateDispatch({ type: 'SET_ACTIVE_TRACK_CUE_INDEX', activeTrackCueIndex: -1 });
       }
 
-      let nextTrackCueActiveIndex = -1;
-
-      // As an optimization, we can start searching from the last active track cue as most users
-      // will be watching in order.
-      if (trackCueActiveIndexRef.current > 0 && activeTrackCue.endTime < currentTime) {
-        nextTrackCueActiveIndex = trackCues
-          .slice(trackCueActiveIndexRef.current)
-          .findIndex((trackCue) => getIsTrackCueActive(trackCue, currentTime));
+      const activeCue = activeCues[0];
+      if (activeCue instanceof VTTCue) {
+        const currentIndex = cuesArray.findIndex((cue) => cue.id === activeCue.id);
+        videoStateDispatch({ type: 'SET_ACTIVE_TRACK_CUE_INDEX', activeTrackCueIndex: currentIndex });
       }
+    };
 
-      // Otherwise search from the start
-      if (nextTrackCueActiveIndex === -1) {
-        nextTrackCueActiveIndex = trackCues.findIndex((trackCue) => getIsTrackCueActive(trackCue, currentTime));
-      }
+    setTrackCues(parsedTrackCues);
+  }, [videoRef, pauseOnCueExit, videoStateDispatch]);
 
-      trackCueActiveIndexRef.current = nextTrackCueActiveIndex;
-      trackCuesDispatch({ type: 'SET_ACTIVE_TRACK_CUE_INDEX', index: nextTrackCueActiveIndex });
-    },
-    [trackCues, trackCuesDispatch],
-  );
-
-  useEffect(() => {
-    determineActiveTrackCueIndex(currentTime);
-  }, [currentTime, determineActiveTrackCueIndex]);
-
-  return trackCues;
+  return [trackCues];
 };
 
 export default useInitializeTrackCues;

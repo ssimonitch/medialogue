@@ -9,7 +9,7 @@ const SliderMarkLabel: FunctionComponent<PropsWithChildren<MuiSliderMarkLabelSlo
   children,
   ...props
 }) => (
-  <span {...props} className={clsx('absolute -top-12 -translate-x-1/2 text-sm', markLabelActive && 'bg-red-200')}>
+  <span {...props} className={clsx('absolute -top-12 -translate-x-1/2 text-sm', markLabelActive && 'text-red-200')}>
     {children}
   </span>
 );

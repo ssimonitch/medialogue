@@ -1,5 +1,5 @@
-import { TrackCue } from '@/app/components/TrackCues/types';
+import { TrackCue } from './types';
 
-export const getIsTrackCueActive = ({ startTime, endTime }: TrackCue, currentTime: number) => {
-  return startTime <= currentTime && endTime >= currentTime;
+export const getCurrentTimeTrackCueIndex = (trackCues: TrackCue[], currentTime: number): number => {
+  return trackCues.findIndex((cue) => currentTime >= cue.startTime && currentTime < cue.endTime);
 };

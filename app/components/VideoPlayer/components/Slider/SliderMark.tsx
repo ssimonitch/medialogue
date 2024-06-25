@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { FunctionComponent, SyntheticEvent } from 'react';
+import { FunctionComponent, SyntheticEvent, useState } from 'react';
 import { SliderMarkSlotProps as MuiSliderMarkSlotProps } from '@mui/base/Slider';
 
 export type HandleChangeMark = (event: SyntheticEvent, markIndex: number) => void;
