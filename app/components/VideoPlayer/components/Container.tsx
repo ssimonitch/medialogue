@@ -28,13 +28,11 @@ const VideoPlayerContainer: FunctionComponent<VideoPlayerContainerProps> = ({
         </div>
       )}
       <div className="relative">
-        <div className="absolute">{ActiveTrackCue}</div>
+        <div className="absolute inset-x-0 top-4">{ActiveTrackCue}</div>
         {Video}
-        <div className={clsx('absolute -bottom-2 z-10 w-full', Slider ? 'bg-slate-800/50' : '')}>{Slider}</div>
+        <div className={clsx('absolute -bottom-2 z-10 w-full', Slider ? '' : '')}>{Slider}</div>
       </div>
-      <div className={clsx('mt-2 flex flex-row justify-end gap-4 py-1', Controls ? 'bg-slate-800/50' : 'h-8')}>
-        {Controls}
-      </div>
+      <div className={clsx('pt-3 flex pb-1', Controls ? 'bg-slate-800/50' : 'h-8')}>{Controls}</div>
     </div>
   );
 };

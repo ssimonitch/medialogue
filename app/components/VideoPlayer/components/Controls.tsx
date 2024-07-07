@@ -1,6 +1,8 @@
 import { FunctionComponent, memo, ChangeEventHandler, RefObject } from 'react';
 import { useVideoStateContext, useVideoStateDispatch } from '@/app/contexts/VideoStateContextProvider';
 
+import Checkbox from '../../base/Checkbox';
+
 type VideoControlsProps = {
   videoRef: RefObject<HTMLVideoElement>;
 };
@@ -36,10 +38,7 @@ const Controls: FunctionComponent<VideoControlsProps> = ({ videoRef }) => {
 
   return (
     <>
-      <div>
-        <input type="checkbox" checked={pauseOnCueExit} onChange={handleTogglePauseOnCueExit} />
-      </div>
-      <div>
+      <div className="flex-grow">
         <button className="rounded bg-blue-200 px-2 text-white" onClick={handlePlayPause}>
           {playing ? 'Pause' : 'Play'}
         </button>
@@ -47,6 +46,9 @@ const Controls: FunctionComponent<VideoControlsProps> = ({ videoRef }) => {
           Stop
         </button>
         <input type="range" min="0" max="1" step="0.1" value={volume} onChange={handleVolumeChange} />
+      </div>
+      <div>
+        <Checkbox label="Pause on cue exit" checked={pauseOnCueExit} onChange={handleTogglePauseOnCueExit} />
       </div>
     </>
   );

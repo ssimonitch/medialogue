@@ -1,17 +1,35 @@
 import clsx from 'clsx';
-import { FunctionComponent, PropsWithChildren } from 'react';
+import { FunctionComponent, PropsWithChildren, SyntheticEvent } from 'react';
 import { SliderMarkLabelSlotProps as MuiSliderMarkLabelSlotProps } from '@mui/base/Slider';
+import { HandleChangeMark, HandleNoop } from './SliderMark';
 
-const SliderMarkLabel: FunctionComponent<PropsWithChildren<MuiSliderMarkLabelSlotProps>> = ({
+type SliderMarkLabelSlotProps = MuiSliderMarkLabelSlotProps & {
+  onChangeMark: HandleChangeMark;
+  onNoop: HandleNoop;
+};
+
+const SliderMarkLabel: FunctionComponent<PropsWithChildren<SliderMarkLabelSlotProps>> = ({
   ownerState,
   className,
   markLabelActive,
   children,
+  onChangeMark,
+  onNoop,
   ...props
-}) => (
-  <span {...props} className={clsx('absolute -top-12 -translate-x-1/2 text-sm', markLabelActive && 'text-red-200')}>
-    {children}
-  </span>
-);
-
+}) => {
+  const markIndex = props['data-index'];
+  const handleClick = (event: SyntheticEvent) => {
+    onChangeMark(event, markIndex);
+  };
+  return (
+    <span
+      {...props}
+      onClick={handleClick}
+      onMouseDown={onNoop}
+      onTouchStart={onNoop}
+      className="pointer-events-none absolute -top-7 -translate-x-1/2 font-medium leading-4">
+      {children}
+    </span>
+  );
+};
 export default SliderMarkLabel;

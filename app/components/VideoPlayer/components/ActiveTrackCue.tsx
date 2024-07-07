@@ -14,7 +14,9 @@ const ActiveTrackCue: FunctionComponent<ActiveTrackCueProps> = ({ trackCues }) =
   const trackCueToDisplay = trackCues[activeTrackCueIndex];
   return (
     <div className="flex justify-center">
-      <p className="text-center text-lg">{trackCueToDisplay?.text}</p>
+      {trackCueToDisplay?.text && (
+        <p className="bg-blue-800 px-2 py-1 text-center text-3xl text-white">{trackCueToDisplay?.text}</p>
+      )}
     </div>
   );
 };

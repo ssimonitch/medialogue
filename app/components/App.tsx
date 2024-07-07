@@ -15,7 +15,7 @@ const App: FunctionComponent = () => {
   return (
     <div className="flex flex-col">
       <VideoPlayer trackCues={trackCues} videoRef={videoRef} />
-      <TrackCues trackCues={trackCues} videoRef={videoRef} />
+      {/* <TrackCues trackCues={trackCues} videoRef={videoRef} /> */}
     </div>
   );
 };

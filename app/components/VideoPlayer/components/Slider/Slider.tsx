@@ -4,17 +4,23 @@ import { useVideoStateContext, useVideoStateDispatch } from '@/app/contexts/Vide
 
 import usePlaybackStepVector from '@/app/components/VideoPlayer/hooks/usePlaybackStepVector';
 
-import { CUE_TIME_DIGITS, STEP_GRANULARITY } from '@/app/components/VideoPlayer/constants';
+import { STEP_GRANULARITY } from '@/app/components/VideoPlayer/constants';
 import Thumb from './SliderThumb';
 import MarkLabel from './SliderMarkLabel';
-import Mark, { HandleChangeMark, HandleNoop } from './SliderMark';
+import Mark, { HandleChangeMark, HandleNoop, GetPreviewTextHandler } from './SliderMark';
 import { TrackCue } from '@/app/components/TrackCues/types';
+import { normalizeCueTime } from '../../helper';
 
 export type SlideOnChangeHandler = (value: number | number[]) => void;
 
 // augment props for the Slider component mark slot
 declare module '@mui/base/Slider' {
   interface SliderMarkSlotPropsOverrides {
+    onChangeMark: HandleChangeMark;
+    onNoop: HandleNoop;
+    getPreviewText: GetPreviewTextHandler;
+  }
+  interface SliderMarkLabelSlotPropsOverrides {
     onChangeMark: HandleChangeMark;
     onNoop: HandleNoop;
   }
@@ -38,8 +44,7 @@ const Slider: FunctionComponent<SliderProps> = ({ trackCues, videoRef }) => {
     // assume there will never be no tracks
     if (trackCues.length === 0 || playbackStepVector.length === 0) return;
 
-    // normalize the cue start times to the same precision as the playback vector
-    const normalizedCueStartTimes = trackCues.map(({ startTime }) => startTime);
+    const cueStartTimes = trackCues.map(({ startTime }) => startTime);
 
     // create mapping of playback step to track cue index
     const normalizedCueIndices = playbackStepVector
@@ -50,10 +55,10 @@ const Slider: FunctionComponent<SliderProps> = ({ trackCues, videoRef }) => {
         // before the video and audio reach that point. This could be good to expose as a control in the future.
         const offsetNormalizedStep = normalizedStep - STEP_GRANULARITY;
         return {
-          step: Number(offsetNormalizedStep.toFixed(CUE_TIME_DIGITS)),
+          step: normalizeCueTime(offsetNormalizedStep),
           // get the index of the cue for this step
-          index: normalizedCueStartTimes.findIndex(
-            (cueStartTime) => cueStartTime.toFixed(CUE_TIME_DIGITS) === normalizedStep.toFixed(CUE_TIME_DIGITS),
+          index: cueStartTimes.findIndex(
+            (cueStartTime) => normalizeCueTime(cueStartTime) === normalizeCueTime(normalizedStep),
           ),
         };
       })
@@ -91,6 +96,17 @@ const Slider: FunctionComponent<SliderProps> = ({ trackCues, videoRef }) => {
     [handleChange, marks],
   );
 
+  const handleGetPreviewText: GetPreviewTextHandler = useCallback(
+    (markIndex) => {
+      // is the text is longer than 3 words, show the first two words. otherwise show the first word only
+      const cueText = trackCues[markIndex].text;
+      const words = cueText.split(' ');
+      let previewText = words.length > 3 ? `${words[0]} ${words[1]}` : words[0];
+      return `${previewText}${words.length === 1 ? '' : '...'}`;
+    },
+    [trackCues],
+  );
+
   return (
     <MuiSlider
       defaultValue={0}
@@ -99,11 +115,20 @@ const Slider: FunctionComponent<SliderProps> = ({ trackCues, videoRef }) => {
       min={0}
       marks={marks}
       value={currentTime}
-      slots={{ thumb: Thumb, mark: Mark, markLabel: MarkLabel }}
+      slots={{
+        thumb: Thumb,
+        mark: Mark,
+        markLabel: MarkLabel,
+      }}
       step={STEP_GRANULARITY}
       shiftStep={STEP_GRANULARITY * 10}
       slotProps={{
         mark: {
+          onChangeMark: handleChangeMark,
+          onNoop: handleNoop,
+          getPreviewText: handleGetPreviewText,
+        },
+        markLabel: {
           onChangeMark: handleChangeMark,
           onNoop: handleNoop,
         },

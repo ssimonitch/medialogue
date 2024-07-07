@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { memo, FunctionComponent, RefObject } from 'react';
 
-import { useVideoStateDispatch, useVideoStateContext } from '@/app/contexts/VideoStateContextProvider';
+import { useVideoStateContext } from '@/app/contexts/VideoStateContextProvider';
 import { TrackCue } from './types';
 
 type TrackCuesProps = {
@@ -12,18 +12,18 @@ type TrackCuesProps = {
 };
 
 const TrackCues: FunctionComponent<TrackCuesProps> = ({ trackCues, videoRef }) => {
-  const videoDispatch = useVideoStateDispatch();
   const { activeTrackCueIndex } = useVideoStateContext();
 
   const handleClickCue = (index: number) => {
     if (!videoRef.current) return;
+    // TODO: use the same offset that we use for seeking with slider marks
     videoRef.current.currentTime = trackCues[index].startTime;
-    videoDispatch({ type: 'SET_CURRENT_TIME', currentTime: trackCues[index].startTime });
   };
 
   return (
     <ol>
       {trackCues.map(({ id, text }, index) => {
+         // TODO: use the same offset that we use for seeking with slider marks
         const isActive = activeTrackCueIndex === index;
         const isComplete = !isActive && index <= activeTrackCueIndex;
         const isUpcoming = !isActive && !isComplete;

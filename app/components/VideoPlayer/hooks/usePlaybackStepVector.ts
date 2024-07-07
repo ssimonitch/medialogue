@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, RefObject } from 'react';
-import { STEP_GRANULARITY } from '@/app/components/VideoPlayer/constants';
+import { PRECISION_FACTOR, STEP_GRANULARITY } from '@/app/components/VideoPlayer/constants';
 
 type UsePlaybackVectorReturn = [number[], number];
 
@@ -34,9 +34,9 @@ const usePlaybackStepVector = (videoRef: RefObject<HTMLVideoElement>): UsePlayba
         : // fallback in case seekable not supported
           Math.ceil(videoElement.duration);
 
-    // expand the vector by the step granularity used by the Slider component to ensure that
-    // the vector length accounts for all rendered steps
-    const vector = new Array(length * (1 / STEP_GRANULARITY)).fill(0);
+    // expand the vector to the total number of seconds in the video, multiplied by the inverse of the step granularity
+    // to allow enough room for each step to be accounted for in the vector
+    const vector = new Array(length * PRECISION_FACTOR).fill(0);
 
     setPlaybackVector(vector);
   }, [videoRef]);

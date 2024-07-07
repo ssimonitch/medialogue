@@ -3,6 +3,8 @@ import { forwardRef, memo, HTMLProps, ChangeEventHandler } from 'react';
 
 import { TrackCue } from '../../TrackCues/types';
 import { getCurrentTimeTrackCueIndex } from '../../TrackCues/helpers';
+import { PRECISION_FACTOR, STEP_GRANULARITY } from '../constants';
+import { normalizeCueTime } from '../helper';
 
 type VideoProps = HTMLProps<HTMLVideoElement> & {
   trackCues: TrackCue[];
@@ -22,7 +24,11 @@ const Video = forwardRef<HTMLVideoElement, VideoProps>(function Video({ children
   };
 
   const handleOnTimeUpdate: VideoChangeEventHandler = (event) => {
-    videoStateDispatch({ type: 'SET_CURRENT_TIME', currentTime: event.target.currentTime });
+    videoStateDispatch({
+      type: 'SET_CURRENT_TIME',
+      // JS floating-point math can be imprecise, so round the currentTime to the same precision as the cue times
+      currentTime: normalizeCueTime(event.target.currentTime),
+    });
   };
 
   const handleOnPlay: VideoChangeEventHandler = (event) => {
