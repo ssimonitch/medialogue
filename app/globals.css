@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer utilities {
+  .shadow-ring-outline {
+    @apply outline-none ring-1 ring-white ring-offset-blue-700 ring-offset-1;
+  }
   .text-balance {
     text-wrap: balance;
   }

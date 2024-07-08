@@ -1,7 +1,7 @@
 import { FunctionComponent, memo, ChangeEventHandler, RefObject } from 'react';
 import { useVideoStateContext, useVideoStateDispatch } from '@/app/contexts/VideoStateContextProvider';
 
-import Checkbox from '../../base/Checkbox';
+import Switch from '../../base/Switch';
 
 type VideoControlsProps = {
   videoRef: RefObject<HTMLVideoElement>;
@@ -48,7 +48,7 @@ const Controls: FunctionComponent<VideoControlsProps> = ({ videoRef }) => {
         <input type="range" min="0" max="1" step="0.1" value={volume} onChange={handleVolumeChange} />
       </div>
       <div>
-        <Checkbox label="Pause on cue exit" checked={pauseOnCueExit} onChange={handleTogglePauseOnCueExit} />
+        <Switch checked={pauseOnCueExit} onChange={handleTogglePauseOnCueExit} />
       </div>
     </>
   );
